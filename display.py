@@ -755,9 +755,8 @@ DECRYPT_TIME_Y = DECRYPT_STATUS_Y + 30 # Time below status
 
 
 # --- Header ---
-hust_label = tk.Label(root, text="ĐẠI HỌC BÁCH KHOA HÀ NỘI", fg='red',font=('Arial', 12, 'bold'), bg='light blue')
+hust_label = tk.Label(root, text="ĐẠI HỌC THĂNG LONG", fg='red',font=('Arial', 12, 'bold'), bg='light blue')
 hust_label.place(x=CENTER_X, y=20, anchor='center')
-info_label = tk.Label(root, text="Nguyễn Việt Hoàng - Nguyễn Đức Mạnh - Lê Cảnh Hải - Vũ Hoàng Dương", fg='dark blue',font=('Arial', 9), bg='light blue')
 info_label.place(x=CENTER_X, y=45, anchor='center')
 
 # --- RSA Title ---
