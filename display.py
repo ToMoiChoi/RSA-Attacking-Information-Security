@@ -591,12 +591,74 @@ def display_decrypt():
          hide_widget(click_n_to_start_decrypt_label)
 
 
+def export_txt():
+    global public_key, private_key, number_encoded
+    if public_key is None or private_key is None:
+        messagebox.showerror("Lỗi", "Chưa có khóa để xuất!")
+        return
+    try:
+        with open("key.txt", "w", encoding="utf-8") as f:
+            f.write(f"d={private_key[0]}\n")
+            f.write(f"n={public_key[1]}\n")
+        with open("public_key.txt", "w", encoding="utf-8") as f:
+            f.write(f"e={public_key[0]}\n")
+            f.write(f"n={public_key[1]}\n")
+            
+        if number_encoded is not None:
+            with open("ciphertext.txt", "w", encoding="utf-8") as f:
+                f.write(f"c={number_encoded}\n")
+            messagebox.showinfo("Thành công", "Đã xuất khóa ra 'key.txt', 'public_key.txt' và bản mã ra 'ciphertext.txt'")
+        else:
+            messagebox.showinfo("Thành công", "Đã xuất khóa ra 'key.txt' và 'public_key.txt'")
+    except Exception as e:
+        messagebox.showerror("Lỗi", f"Không thể xuất file: {e}")
+
+def read_key_file():
+    global d_number_private, n_number_private, decrypt_btn_enabled_status, number_encoded
+    try:
+        with open("key.txt", "r", encoding="utf-8") as f:
+            lines = f.readlines()
+            d_val = None
+            n_val = None
+            for line in lines:
+                if line.startswith("d="):
+                    d_val = int(line.split("=")[1].strip())
+                elif line.startswith("n="):
+                    n_val = int(line.split("=")[1].strip())
+            
+            try:
+                with open("ciphertext.txt", "r", encoding="utf-8") as fc:
+                     for line in fc:
+                         if line.startswith("c="):
+                              number_encoded = int(line.split("=")[1].strip())
+            except Exception:
+                pass
+
+            if d_val is not None and n_val is not None:
+                d_private_key_entry.config(state='normal')
+                d_private_key_entry.delete(0, tk.END)
+                d_private_key_entry.insert(0, str(d_val))
+                display_button_check_integer('d', d_private_key_entry, check_d_label)
+
+                n_private_key_entry.config(state='normal')
+                n_private_key_entry.delete(0, tk.END)
+                n_private_key_entry.insert(0, str(n_val))
+                display_button_check_integer('n', n_private_key_entry, check_n_label)
+                
+                messagebox.showinfo("Thành công", "Đã đọc file key.txt thành công.")
+            else:
+                messagebox.showerror("Lỗi", "Không tìm thấy d=... hoặc n=... trong file key.txt")
+    except FileNotFoundError:
+         messagebox.showerror("Lỗi", "Không tìm thấy file key.txt.")
+    except Exception as e:
+         messagebox.showerror("Lỗi", f"Lỗi đọc file: {e}")
+
 def display_entry_private_key(hide_only=False):
     """Shows or hides the private key entry widgets."""
     widgets_to_manage = [
         entry_private_key_label, d_private_key_entry, n_private_key_entry,
         d_private_key_button, n_private_key_button, check_d_label, check_n_label,
-        decrypt_btn, click_n_to_start_decrypt_label
+        decrypt_btn, click_n_to_start_decrypt_label, button_read_key_file
     ]
 
     if hide_only:
@@ -624,6 +686,9 @@ def display_entry_private_key(hide_only=False):
 
     # --- Place widgets for Decryption Input ---
     entry_private_key_label.place(x=0, y=DECRYPT_INPUT_START_Y, anchor='nw')
+
+    button_read_key_file.config(state='normal')
+    button_read_key_file.place(x=150, y=DECRYPT_INPUT_START_Y, anchor='nw')
 
     d_private_key_entry.config(state='normal')
     d_private_key_entry.delete(0, tk.END)
@@ -731,6 +796,9 @@ button_encrypt = tk.Button(col1_frame,
                            state='disabled') # Initially disabled
 button_encrypt.place(x=0, y=ENCRYPT_BTN_Y, anchor='nw')
 
+button_export_txt = tk.Button(col1_frame, text="Xuất ra file txt", bg='light green', command=export_txt)
+button_export_txt.place(x=150, y=ENCRYPT_BTN_Y, anchor='nw')
+
 # Placeholder labels for dynamic content in Column 1 (initialize as None)
 # --- SỬA Ở ĐÂY: Vẫn giữ public_key_label = None để hide_widget không lỗi ---
 public_key_label = None # Sẽ không được tạo hoặc hiển thị trực tiếp nữa
@@ -757,6 +825,7 @@ n_private_key_entry = tk.Entry(col2_frame, width=30)
 check_d_label = tk.Label(col2_frame, text="", fg='green', font=('Arial', 8), bg='light blue')
 check_n_label = tk.Label(col2_frame, text="", fg='green', font=('Arial', 8), bg='light blue')
 click_n_to_start_decrypt_label = None # Initialize as None, created on demand
+button_read_key_file = tk.Button(col2_frame, text="Đọc từ file key.txt", bg='light green', command=read_key_file)
 
 # --- SỬA Ở ĐÂY: Sửa lỗi chính tả và truyền widget ---
 d_private_key_button = tk.Button(col2_frame,
