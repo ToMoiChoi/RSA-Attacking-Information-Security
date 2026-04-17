@@ -1,6 +1,8 @@
 import tkinter as tk
 from tkinter import *
 from tkinter import messagebox
+from tkinter import filedialog
+import os
 import src # Keep src.py unchanged
 import time
 import textwrap # For wrapping long numbers
@@ -137,10 +139,6 @@ class Bigger_than_key(Exception):
 
         # Disable subsequent steps until new key is generated
         button_encrypt.config(state='disabled')
-        start_decrypt_btn.config(state='disabled')
-        hide_widget(start_decrypt_btn) # Also hide the button
-        # Hide decryption input widgets if they are visible
-        display_entry_private_key(hide_only=True)
 
 
     @staticmethod
@@ -158,7 +156,6 @@ class Bigger_than_key(Exception):
         hide_widget(number_decrypted_label) # Hide potential old decryption results
         hide_widget(result_status_label)
         hide_widget(time_decrypt_label)
-        display_entry_private_key(hide_only=True) # Hide decrypt inputs
 
         start_time = time.time()
         # Encrypt the REDUCED number
@@ -184,9 +181,6 @@ class Bigger_than_key(Exception):
         time_encrypt_label.config(text=f'T.gian mã hóa: {time_encrypt:.4f}s')
         time_encrypt_label.place(x=0, y=KEY_INFO_Y, anchor='nw') # Place where key info used to be
 
-        start_decrypt_btn.config(state='normal') # Enable decrypt button
-        start_decrypt_btn.place(x=0, y=DECRYPT_BUTTON_Y, anchor='nw') # Place in col2_frame
-
         button_encrypt.config(state='disabled') # Disable encrypt after use
 
 
@@ -210,9 +204,6 @@ def display_gen_key():
         hide_widget(result_status_label)
         hide_widget(time_decrypt_label)
         button_encrypt.config(state='disabled')
-        start_decrypt_btn.config(state='disabled')
-        hide_widget(start_decrypt_btn)
-        display_entry_private_key(hide_only=True) # Hide decrypt inputs
         root.update_idletasks()
 
         start_time = time.time()
@@ -277,10 +268,6 @@ Khóa bí mật (d, n): ({d_val}, {n_val}) <-- GIỮ BÍ MẬT!
         else:
              button_encrypt.config(state='disabled') # Keep disabled if number not entered yet
 
-        # Keep decrypt button disabled until encryption happens
-        start_decrypt_btn.config(state='disabled')
-        hide_widget(start_decrypt_btn) # Ensure it's hidden
-
     except ValueError as ve:
         messagebox.showerror("Lỗi Đầu Vào", f"Lỗi: {ve}")
         entry_bitlength_key.config(state='normal')
@@ -295,14 +282,10 @@ def display_get_num_to_encode():
     try:
         num_str = entry_num_to_encode.get()
         if not num_str:
-            raise ValueError("Chưa nhập số.")
-        num_to_encode = int(num_str)
+            raise ValueError("Chưa nhập văn bản.")
+        num_to_encode = int.from_bytes(num_str.encode('utf-8'), 'big')
 
-        if num_to_encode < 0:
-            messagebox.showwarning("Cảnh báo", "Số âm sẽ được mã hóa giá trị tuyệt đối.")
-            num_to_encode = abs(num_to_encode)
-
-        check_num_label.config(text=f"Số đã nhập: {num_to_encode} ✅")
+        check_num_label.config(text=f"Đã nhập văn bản ✅")
         # check_num_label is already placed
         entry_num_to_encode.config(state='disabled')
         button_start_encode.config(state='disabled')
@@ -313,8 +296,8 @@ def display_get_num_to_encode():
         else:
             button_encrypt.config(state='disabled') # Keep disabled if key not generated yet
 
-    except ValueError as e:
-        messagebox.showerror("Lỗi", f"Vui lòng nhập một số nguyên hợp lệ. {e}")
+    except Exception as e:
+        messagebox.showerror("Lỗi", f"Vui lòng nhập dữ liệu hợp lệ. {e}")
         entry_num_to_encode.config(state='normal') # Allow re-entry
         button_start_encode.config(state='normal')
         num_to_encode = None # Reset if invalid
@@ -336,7 +319,6 @@ def display_start_encrypt():
         hide_widget(number_decrypted_label)
         hide_widget(result_status_label)
         hide_widget(time_decrypt_label)
-        display_entry_private_key(hide_only=True) # Hide decrypt inputs
         # --- SỬA Ở ĐÂY: Cũng ẩn time_gen_key_label khi bắt đầu mã hóa mới ---
         hide_widget(time_gen_key_label) # Ẩn thông tin thời gian tạo khóa cũ
 
@@ -369,10 +351,6 @@ def display_start_encrypt():
         # --- SỬA Ở ĐÂY: Đặt time_encrypt_label vào vị trí KEY_INFO_Y ---
         time_encrypt_label.place(x=0, y=KEY_INFO_Y, anchor='nw') # Đặt ở vị trí cũ của thông tin khóa
 
-        # Enable and place decrypt button
-        start_decrypt_btn.config(state='normal')
-        start_decrypt_btn.place(x=0, y=DECRYPT_BUTTON_Y, anchor='nw') # Place in col2_frame
-
         button_encrypt.config(state='disabled') # Disable encrypt button after use
 
     except Bigger_than_key:
@@ -392,7 +370,7 @@ def display_start_encrypt():
 # --- SỬA Ở ĐÂY: Đổi tên tham số và bỏ globals() lookup ---
 def display_button_check_integer(key_type, entry_widget, check_label_widget):
     """Checks D or N input, updates UI, and enables decrypt button if both are valid."""
-    global d_number_private, n_number_private, decrypt_btn_enabled_status
+    global d_number_private, n_number_private, decrypt_btn_enabled_status, click_n_to_start_decrypt_label
 
     entry_str = entry_widget.get()
     # Removed: check_label_widget = globals()[check_label_var_name]
@@ -405,7 +383,7 @@ def display_button_check_integer(key_type, entry_widget, check_label_widget):
         check_label_config = {'fg': 'green', 'font': ('Arial', 8), 'bg': 'light blue'}
         # Sử dụng trực tiếp check_label_widget
         check_label_widget.config(text=f"✅", **check_label_config) # Chỉ hiển thị dấu check
-        check_label_widget.place(x=250, y=DECRYPT_INPUT_START_Y + (30 if key_type == 'd' else 55), anchor='nw') # Đảm bảo nó được place
+        check_label_widget.place(x=250, y=DECRYPT_INPUT_START_Y + (85 if key_type == 'd' else 110), anchor='nw') # Đảm bảo nó được place
 
         entry_widget.config(state='disabled')
 
@@ -430,7 +408,7 @@ def display_button_check_integer(key_type, entry_widget, check_label_widget):
             if click_n_to_start_decrypt_label is None:
                  click_n_to_start_decrypt_label = tk.Label(col2_frame, wraplength=100, bg='light blue', fg='blue')
             click_n_to_start_decrypt_label.config(text=prompt_text)
-            click_n_to_start_decrypt_label.place(x=150, y=DECRYPT_INPUT_START_Y + 85, anchor='nw') # Adjust position if needed
+            click_n_to_start_decrypt_label.place(x=180, y=DECRYPT_INPUT_START_Y + 145, anchor='nw') # Adjust position if needed
 
 
     except ValueError as e:
@@ -482,6 +460,13 @@ def display_decrypt():
         time_decrypt = end_time - start_time
 
         wrapped_decrypted_num = wrap_number(number_decrypted, 45) # Wrap result
+
+        try:
+            byte_len = (number_decrypted.bit_length() + 7) // 8
+            decrypted_text = number_decrypted.to_bytes(byte_len, 'big').decode('utf-8')
+            wrapped_decrypted_num += f"\n\nBản rõ (Văn bản): {decrypted_text}"
+        except:
+            pass
 
         # Reconfigure or create labels
         if number_decrypted_label is None:
@@ -591,6 +576,35 @@ def display_decrypt():
          hide_widget(click_n_to_start_decrypt_label)
 
 
+def read_public_key_file():
+    global public_key, time_gen_key_label
+    filepath = filedialog.askopenfilename(title="Mở file Public Key", filetypes=[("Text files", "*.txt"), ("All files", "*.*")])
+    if not filepath:
+        return
+    try:
+        with open(filepath, "r", encoding="utf-8") as f:
+            e_val, n_val = None, None
+            for line in f:
+                if line.startswith("e="):
+                    e_val = int(line.split("=")[1].strip())
+                elif line.startswith("n="):
+                    n_val = int(line.split("=")[1].strip())
+            
+            if e_val is not None and n_val is not None:
+                public_key = (e_val, n_val)
+                if time_gen_key_label is None:
+                    time_gen_key_label = tk.Label(col1_frame, bg="#f7b681")
+                time_gen_key_label.config(text=f'Đã đọc Public Key từ file:\ne={e_val}\nn={n_val}')
+                time_gen_key_label.place(x=0, y=KEY_INFO_Y, anchor='nw')
+                
+                if num_to_encode is not None:
+                    button_encrypt.config(state='normal')
+                messagebox.showinfo("Thành công", f"Đã đọc file {os.path.basename(filepath)}")
+            else:
+                messagebox.showerror("Lỗi", "Không tìm thấy e=... hoặc n=... trong file.")
+    except Exception as e:
+        messagebox.showerror("Lỗi", f"Lỗi đọc file: {e}")
+
 def export_txt():
     global public_key, private_key, number_encoded
     if public_key is None or private_key is None:
@@ -615,8 +629,11 @@ def export_txt():
 
 def read_key_file():
     global d_number_private, n_number_private, decrypt_btn_enabled_status, number_encoded
+    filepath = filedialog.askopenfilename(title="Mở file Private Key", filetypes=[("Text files", "*.txt"), ("All files", "*.*")])
+    if not filepath:
+        return
     try:
-        with open("key.txt", "r", encoding="utf-8") as f:
+        with open(filepath, "r", encoding="utf-8") as f:
             lines = f.readlines()
             d_val = None
             n_val = None
@@ -627,7 +644,8 @@ def read_key_file():
                     n_val = int(line.split("=")[1].strip())
             
             try:
-                with open("ciphertext.txt", "r", encoding="utf-8") as fc:
+                cipher_path = os.path.join(os.path.dirname(filepath), "ciphertext.txt")
+                with open(cipher_path, "r", encoding="utf-8") as fc:
                      for line in fc:
                          if line.startswith("c="):
                               number_encoded = int(line.split("=")[1].strip())
@@ -645,11 +663,12 @@ def read_key_file():
                 n_private_key_entry.insert(0, str(n_val))
                 display_button_check_integer('n', n_private_key_entry, check_n_label)
                 
-                messagebox.showinfo("Thành công", "Đã đọc file key.txt thành công.")
+                msg = f"Đã đọc file {os.path.basename(filepath)}."
+                if number_encoded is not None:
+                    msg += "\n(Đã tải ciphertext.txt trong cùng thư mục)"
+                messagebox.showinfo("Thành công", msg)
             else:
-                messagebox.showerror("Lỗi", "Không tìm thấy d=... hoặc n=... trong file key.txt")
-    except FileNotFoundError:
-         messagebox.showerror("Lỗi", "Không tìm thấy file key.txt.")
+                messagebox.showerror("Lỗi", f"Không tìm thấy d=... hoặc n=... trong {os.path.basename(filepath)}")
     except Exception as e:
          messagebox.showerror("Lỗi", f"Lỗi đọc file: {e}")
 
@@ -658,7 +677,8 @@ def display_entry_private_key(hide_only=False):
     widgets_to_manage = [
         entry_private_key_label, d_private_key_entry, n_private_key_entry,
         d_private_key_button, n_private_key_button, check_d_label, check_n_label,
-        decrypt_btn, click_n_to_start_decrypt_label, button_read_key_file
+        decrypt_btn, click_n_to_start_decrypt_label, button_read_key_file,
+        label_manual_input_pn
     ]
 
     if hide_only:
@@ -674,10 +694,7 @@ def display_entry_private_key(hide_only=False):
     d_number_private = None
     n_number_private = None
     decrypt_btn_enabled_status = {'d': False, 'n': False} # Reset status tracker
-
-    # Disable button that triggers this view
-    hide_widget(start_decrypt_btn) # Use hide_widget
-
+    
     # Hide previous results labels from decryption area
     hide_widget(number_decrypted_label)
     hide_widget(result_status_label)
@@ -688,21 +705,23 @@ def display_entry_private_key(hide_only=False):
     entry_private_key_label.place(x=0, y=DECRYPT_INPUT_START_Y, anchor='nw')
 
     button_read_key_file.config(state='normal')
-    button_read_key_file.place(x=150, y=DECRYPT_INPUT_START_Y, anchor='nw')
+    button_read_key_file.place(x=0, y=DECRYPT_INPUT_START_Y + 25, anchor='nw')
+
+    label_manual_input_pn.place(x=0, y=DECRYPT_INPUT_START_Y + 60, anchor='nw')
 
     d_private_key_entry.config(state='normal')
     d_private_key_entry.delete(0, tk.END)
-    d_private_key_entry.place(x=0, y=DECRYPT_INPUT_START_Y + 30, anchor='nw', width=180) # Adjusted width
+    d_private_key_entry.place(x=0, y=DECRYPT_INPUT_START_Y + 85, anchor='nw', width=180)
 
     n_private_key_entry.config(state='normal')
     n_private_key_entry.delete(0, tk.END)
-    n_private_key_entry.place(x=0, y=DECRYPT_INPUT_START_Y + 55, anchor='nw', width=180) # Adjusted width
+    n_private_key_entry.place(x=0, y=DECRYPT_INPUT_START_Y + 110, anchor='nw', width=180)
 
     d_private_key_button.config(state='normal')
-    d_private_key_button.place(x=190, y=DECRYPT_INPUT_START_Y + 28, anchor='nw') # Adjusted position
+    d_private_key_button.place(x=190, y=DECRYPT_INPUT_START_Y + 83, anchor='nw')
 
     n_private_key_button.config(state='normal')
-    n_private_key_button.place(x=190, y=DECRYPT_INPUT_START_Y + 53, anchor='nw') # Adjusted position
+    n_private_key_button.place(x=190, y=DECRYPT_INPUT_START_Y + 108, anchor='nw')
 
     # Configure and place checkmark labels (initially empty)
     check_d_label.config(text="")
@@ -712,7 +731,7 @@ def display_entry_private_key(hide_only=False):
 
     # Place decrypt button but keep disabled
     decrypt_btn.config(state='disabled')
-    decrypt_btn.place(x=0, y=DECRYPT_INPUT_START_Y + 85, anchor='nw')
+    decrypt_btn.place(x=0, y=DECRYPT_INPUT_START_Y + 145, anchor='nw')
 
 
 # ================== MAIN WINDOW SETUP ==================
@@ -740,25 +759,19 @@ col2_frame.place(x=RIGHT_MARGIN, y=100, anchor='nw')
 # --- Constants for Y positions within frames ---
 INPUT_NUM_Y = 0
 INPUT_KEY_Y = 90
-# --- SỬA Ở ĐÂY: KEY_INFO_Y giờ là vị trí cho thông báo/thời gian ---
-KEY_INFO_Y = 160 # Where key gen confirmation/time or encrypt time is displayed
-# --- Bỏ TIME_INFO_Y vì đã gộp vào KEY_INFO_Y ---
-# TIME_INFO_Y = KEY_INFO_Y + 45
-ENCRYPT_BTN_Y = 230
-ENCRYPT_RESULT_Y = 270 # Where encoded number is displayed
+KEY_INFO_Y = 210 # Vị trí thông báo
+ENCRYPT_BTN_Y = 260
+ENCRYPT_RESULT_Y = 300 
 
-DECRYPT_BUTTON_Y = 0 # "Bắt đầu giải mã" button Y in col2
-DECRYPT_INPUT_START_Y = 40 # Start of d/n input elements in col2
-DECRYPT_RESULT_Y = DECRYPT_INPUT_START_Y + 130 # Where decoded number is displayed
-DECRYPT_STATUS_Y = DECRYPT_RESULT_Y + 45 # Status below result
+DECRYPT_INPUT_START_Y = 0 # Start of d/n input elements in col2
+DECRYPT_RESULT_Y = DECRYPT_INPUT_START_Y + 190 # Where decoded number is displayed
+DECRYPT_STATUS_Y = DECRYPT_RESULT_Y + 60 # Status below result
 DECRYPT_TIME_Y = DECRYPT_STATUS_Y + 30 # Time below status
 
 
 # --- Header ---
 hust_label = tk.Label(root, text="ĐẠI HỌC THĂNG LONG", fg='red',font=('Arial', 12, 'bold'), bg='light blue')
 hust_label.place(x=CENTER_X, y=20, anchor='center')
-info_label.place(x=CENTER_X, y=45, anchor='center')
-
 # --- RSA Title ---
 rsa_label = tk.Label(root, text="MÃ HÓA / GIẢI MÃ RSA", fg='black',bg='#05ff16',font=('Arial', 11, 'bold'))
 rsa_label.place(x=CENTER_X, y=80, anchor='center')
@@ -766,29 +779,36 @@ rsa_label.place(x=CENTER_X, y=80, anchor='center')
 # ================== Widgets Column 1 (Input, KeyGen, Encrypt) ==================
 
 # 1. Input number to encode
-label_input_num_to_encode = tk.Label(col1_frame, text="1. Nhập số nguyên cần mã hóa:",bg='sky blue')
+label_input_num_to_encode = tk.Label(col1_frame, text="Bước 1: Nhập bản rõ cần mã hóa:", font=('Arial', 10, 'bold'), bg='sky blue')
 label_input_num_to_encode.place(x=0, y=INPUT_NUM_Y, anchor='nw')
 entry_num_to_encode = tk.Entry(col1_frame, width=30)
 entry_num_to_encode.place(x=0, y=INPUT_NUM_Y + 25, anchor='nw')
-button_start_encode = tk.Button(col1_frame, text="Xác nhận số", command=display_get_num_to_encode, activebackground='red')
-button_start_encode.place(x=200, y=INPUT_NUM_Y + 23, anchor='nw')
+button_start_encode = tk.Button(col1_frame, text="Xác nhận", command=display_get_num_to_encode, activebackground='red')
+button_start_encode.place(x=190, y=INPUT_NUM_Y + 23, anchor='nw')
 check_num_label = tk.Label(col1_frame, text="", fg='green', font=('Arial', 9), bg='light blue')
-check_num_label.place(x=0, y=INPUT_NUM_Y + 55, anchor='nw')
+check_num_label.place(x=255, y=INPUT_NUM_Y + 26, anchor='nw')
 
 # 2. Generate Keys
-label_input_bitlength_key = tk.Label(col1_frame, text="2. Nhập độ dài khóa (bit):",bg='sky blue')
+label_input_bitlength_key = tk.Label(col1_frame, text="Bước 2: Thiết lập khóa công khai (Public Key):", font=('Arial', 10, 'bold'), bg='sky blue')
 label_input_bitlength_key.place(x=0, y=INPUT_KEY_Y, anchor='nw')
-entry_bitlength_key = tk.Entry(col1_frame, width=10)
+
+tk.Label(col1_frame, text="• Tạo khóa mới:", bg='light blue').place(x=0, y=INPUT_KEY_Y + 25, anchor='nw')
+entry_bitlength_key = tk.Entry(col1_frame, width=8)
 entry_bitlength_key.insert(0, "1024") # Default value
-entry_bitlength_key.place(x=150, y=INPUT_KEY_Y, anchor='nw')
+entry_bitlength_key.place(x=100, y=INPUT_KEY_Y + 25, anchor='nw')
+tk.Label(col1_frame, text="(bits)", bg='light blue').place(x=150, y=INPUT_KEY_Y + 25, anchor='nw')
 button_gen_key = tk.Button(col1_frame, text="Sinh khóa", command=display_gen_key, activebackground='red')
-button_gen_key.place(x=230, y=INPUT_KEY_Y - 2, anchor='nw')
-label_rcm_bitlength = tk.Label(col1_frame, text="Gợi ý: [16-4096], phổ biến 1024, 2048.", bg='yellow', wraplength=150, justify='left')
-label_rcm_bitlength.place(x=0, y=INPUT_KEY_Y + 30, anchor='nw')
+button_gen_key.place(x=190, y=INPUT_KEY_Y + 23, anchor='nw')
+label_rcm_bitlength = tk.Label(col1_frame, text="Gợi ý: [16-4096], phổ biến 1024, 2048.", bg='light blue', fg='gray')
+label_rcm_bitlength.place(x=0, y=INPUT_KEY_Y + 50, anchor='nw')
+
+button_read_public_key = tk.Button(col1_frame, text="• Hoặc đọc từ file public_key.txt", bg='light green', command=read_public_key_file)
+button_read_public_key.place(x=0, y=INPUT_KEY_Y + 80, anchor='nw')
 
 # 3. Encrypt Button
 button_encrypt = tk.Button(col1_frame,
-                           text="3. Mã hóa số đã nhập",
+                           text="Bước 3: Mã hóa",
+                           font=('Arial', 10, 'bold'),
                            bg='#ff8a05',
                            command=display_start_encrypt,
                            activebackground='green',
@@ -796,7 +816,7 @@ button_encrypt = tk.Button(col1_frame,
 button_encrypt.place(x=0, y=ENCRYPT_BTN_Y, anchor='nw')
 
 button_export_txt = tk.Button(col1_frame, text="Xuất ra file txt", bg='light green', command=export_txt)
-button_export_txt.place(x=150, y=ENCRYPT_BTN_Y, anchor='nw')
+button_export_txt.place(x=130, y=ENCRYPT_BTN_Y, anchor='nw')
 
 # Placeholder labels for dynamic content in Column 1 (initialize as None)
 # --- SỬA Ở ĐÂY: Vẫn giữ public_key_label = None để hide_widget không lỗi ---
@@ -808,38 +828,32 @@ time_encrypt_label = None # Sẽ được đặt ở vị trí KEY_INFO_Y khi m�
 
 # ================== Widgets Column 2 (Decrypt) ==================
 
-# 4. Decrypt Button (Starts the process)
-start_decrypt_btn = tk.Button(col2_frame,
-                              text="4. Bắt đầu giải mã >>",
-                              fg='black', bg='#87CEEB', # Sky blue background
-                              command=lambda: display_entry_private_key(hide_only=False), # Call without hide_only
-                              state='disabled') # Initially disabled
-# Don't place it initially, placed by display_start_encrypt
-
 # Widgets for entering private key (managed by display_entry_private_key)
-entry_private_key_label = tk.Label(col2_frame, text="Nhập khóa bí mật:", fg='black',font=('Arial', 10), bg='light blue')
+entry_private_key_label = tk.Label(col2_frame, text="Bước 4: Nhập khóa bí mật (Private Key):", fg='black',font=('Arial', 10, 'bold'), bg='light blue')
 d_private_key_entry = tk.Entry(col2_frame, width=30)
 n_private_key_entry = tk.Entry(col2_frame, width=30)
 # Create check labels here
 check_d_label = tk.Label(col2_frame, text="", fg='green', font=('Arial', 8), bg='light blue')
 check_n_label = tk.Label(col2_frame, text="", fg='green', font=('Arial', 8), bg='light blue')
 click_n_to_start_decrypt_label = None # Initialize as None, created on demand
-button_read_key_file = tk.Button(col2_frame, text="Đọc từ file key.txt", bg='light green', command=read_key_file)
+button_read_key_file = tk.Button(col2_frame, text="• Đọc từ file key.txt", bg='light green', command=read_key_file)
 
 # --- SỬA Ở ĐÂY: Sửa lỗi chính tả và truyền widget ---
 d_private_key_button = tk.Button(col2_frame,
-                                 text="Nhập d",
+                                 text="Nhận d",
                                  # Gọi đúng tên hàm, truyền widget check_d_label
                                  command=lambda: display_button_check_integer('d', d_private_key_entry, check_d_label),
                                  activebackground='red')
 n_private_key_button = tk.Button(col2_frame,
-                                 text="Nhập n",
+                                 text="Nhận n",
                                  # Gọi đúng tên hàm, truyền widget check_n_label
                                  command=lambda: display_button_check_integer('n', n_private_key_entry, check_n_label),
                                  activebackground='red')
 
+label_manual_input_pn = tk.Label(col2_frame, text="• Hoặc nhập tay d và n:", bg='light blue')
+
 # 5. Decrypt Button (Final step)
-decrypt_btn = tk.Button(col2_frame, text="5. Giải mã 👈 ", fg='black', bg='#ff8a05', command=display_decrypt, state='disabled')
+decrypt_btn = tk.Button(col2_frame, text="Bước 5: Giải mã 👈 ", font=('Arial', 10, 'bold'), fg='black', bg='#ff8a05', command=display_decrypt, state='disabled')
 
 # Placeholder labels for dynamic content in Column 2 (initialize as None)
 number_decrypted_label = None
@@ -867,8 +881,8 @@ time_gen_key = None
 time_encrypt = None
 time_decrypt = None
 
-# --- Hide decrypt inputs initially ---
-display_entry_private_key(hide_only=True)
+# --- Setup decrypt inputs ---
+display_entry_private_key(hide_only=False)
 
 
 root.mainloop()
