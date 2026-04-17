@@ -3,9 +3,9 @@
 
 Chương trình Python mô phỏng toàn diện quá trình **sinh khóa**, **mã hóa**, **giải mã** bằng RSA, đồng thời tích hợp giao diện để **mô phỏng tấn công** nhằm minh họa các điểm yếu nếu tham số RSA không đủ an toàn.
 
-> 📌 Dành cho học phần Mật mã - Đại học Bách Khoa Hà Nội  
-> 👨‍🎓 Sinh viên thực hiện:
-- Nguyễn Việt Hoàng - 20227019---
+> 📌 Dành cho học phần Mật mã - Đại học Thăng Long  
+<!-- > 👨‍🎓 Sinh viên thực hiện: -->
+
 
 ## ⚙️ Tính năng chính
 
