@@ -849,7 +849,7 @@ n_private_key_button = tk.Button(col2_frame,
 label_manual_input_pn = tk.Label(col2_frame, text="• Hoặc nhập tay d và n:", bg='light blue')
 
 # 5. Decrypt Button (Final step)
-decrypt_btn = tk.Button(col2_frame, text="Bước 5: Giải mã 👈 ", font=('Arial', 10, 'bold'), fg='black', bg='#ff8a05', command=display_decrypt, state='disabled')
+decrypt_btn = tk.Button(col2_frame, text="Bước 5: Giải mã", font=('Arial', 10, 'bold'), fg='black', bg='#ff8a05', command=display_decrypt, state='disabled')
 
 # Placeholder labels for dynamic content in Column 2 (initialize as None)
 number_decrypted_label = None
