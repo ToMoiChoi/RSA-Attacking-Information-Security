@@ -606,24 +606,20 @@ def read_public_key_file():
         messagebox.showerror("Lỗi", f"Lỗi đọc file: {e}")
 
 def export_txt():
-    global public_key, private_key, number_encoded
-    if public_key is None or private_key is None:
-        messagebox.showerror("Lỗi", "Chưa có khóa để xuất!")
+    global public_key, number_encoded
+    if public_key is None:
+        messagebox.showerror("Lỗi", "Chưa có khóa công khai để xuất!")
+        return
+    if number_encoded is None:
+        messagebox.showerror("Lỗi", "Chưa có bản mã để xuất!\nVui lòng mã hóa trước.")
         return
     try:
-        with open("key.txt", "w", encoding="utf-8") as f:
-            f.write(f"d={private_key[0]}\n")
-            f.write(f"n={public_key[1]}\n")
         with open("public_key.txt", "w", encoding="utf-8") as f:
             f.write(f"e={public_key[0]}\n")
             f.write(f"n={public_key[1]}\n")
-            
-        if number_encoded is not None:
-            with open("ciphertext.txt", "w", encoding="utf-8") as f:
-                f.write(f"c={number_encoded}\n")
-            messagebox.showinfo("Thành công", "Đã xuất khóa ra 'key.txt', 'public_key.txt' và bản mã ra 'ciphertext.txt'")
-        else:
-            messagebox.showinfo("Thành công", "Đã xuất khóa ra 'key.txt' và 'public_key.txt'")
+        with open("ciphertext.txt", "w", encoding="utf-8") as f:
+            f.write(f"c={number_encoded}\n")
+        messagebox.showinfo("Thành công", "Đã xuất:\n  • public_key.txt\n  • ciphertext.txt")
     except Exception as e:
         messagebox.showerror("Lỗi", f"Không thể xuất file: {e}")
 
@@ -737,8 +733,8 @@ def display_entry_private_key(hide_only=False):
 # ================== MAIN WINDOW SETUP ==================
 root = Tk()
 root.title("Chương trình Mã hóa RSA - 20227019")
-WINDOW_WIDTH = 800
-WINDOW_HEIGHT = 600
+WINDOW_WIDTH = 1080
+WINDOW_HEIGHT = 720
 root.geometry(f'{WINDOW_WIDTH}x{WINDOW_HEIGHT}')
 root.resizable(0,0)
 root.configure(bg='light blue')

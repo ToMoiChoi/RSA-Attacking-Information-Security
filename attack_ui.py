@@ -2,12 +2,86 @@
 # Tkinter UI for RSA Attack Simulation
 
 import tkinter as tk
-from tkinter import ttk, scrolledtext, messagebox
+from tkinter import ttk, scrolledtext, messagebox, filedialog
 import attack_src
 import math # Import math if needed for checks like c < n
+import os
 
 # Constants
 BRUTE_FORCE_LIMIT = 1000000 # Set default limit for brute-force M here
+
+# Default file paths (same directory as script)
+SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
+DEFAULT_PUBLIC_KEY_FILE = os.path.join(SCRIPT_DIR, "public_key.txt")
+DEFAULT_CIPHERTEXT_FILE = os.path.join(SCRIPT_DIR, "ciphertext.txt")
+
+def load_from_files():
+    """Reads public_key.txt and ciphertext.txt, fills e, n, c entries."""
+    # --- Read public_key.txt ---
+    pub_path = DEFAULT_PUBLIC_KEY_FILE
+    if not os.path.exists(pub_path):
+        pub_path = filedialog.askopenfilename(
+            title="Chọn file khóa công khai",
+            filetypes=[("Text files", "*.txt"), ("All files", "*.*")]
+        )
+        if not pub_path:
+            return
+
+    e_val = None
+    n_val = None
+    try:
+        with open(pub_path, "r", encoding="utf-8") as f:
+            for line in f:
+                line = line.strip()
+                if line.startswith("e="):
+                    e_val = line.split("=", 1)[1].strip()
+                elif line.startswith("n="):
+                    n_val = line.split("=", 1)[1].strip()
+    except Exception as ex:
+        messagebox.showerror("Lỗi", f"Không thể đọc file khóa công khai:\n{ex}")
+        return
+
+    if e_val is None or n_val is None:
+        messagebox.showerror("Lỗi", "File khóa công khai không hợp lệ.\nCần có dòng 'e=...' và 'n=...'.")
+        return
+
+    # --- Read ciphertext.txt ---
+    ciph_path = DEFAULT_CIPHERTEXT_FILE
+    if not os.path.exists(ciph_path):
+        ciph_path = filedialog.askopenfilename(
+            title="Chọn file bản mã",
+            filetypes=[("Text files", "*.txt"), ("All files", "*.*")]
+        )
+        if not ciph_path:
+            return
+
+    c_val = None
+    try:
+        with open(ciph_path, "r", encoding="utf-8") as f:
+            for line in f:
+                line = line.strip()
+                if line.startswith("c="):
+                    c_val = line.split("=", 1)[1].strip()
+    except Exception as ex:
+        messagebox.showerror("Lỗi", f"Không thể đọc file bản mã:\n{ex}")
+        return
+
+    if c_val is None:
+        messagebox.showerror("Lỗi", "File bản mã không hợp lệ.\nCần có dòng 'c=...'.")
+        return
+
+    # --- Fill entries ---
+    entry_e.delete(0, tk.END)
+    entry_e.insert(0, e_val)
+
+    entry_n.delete(0, tk.END)
+    entry_n.insert(0, n_val)
+
+    entry_c.delete(0, tk.END)
+    entry_c.insert(0, c_val)
+
+    messagebox.showinfo("Thành công",
+        f"Đã tải:\n  e = {e_val}\n  n = {n_val}\n  c = {c_val}")
 
 def validate_input(value_str, name):
     """Tries to convert input to int, shows error if fails."""
@@ -211,6 +285,10 @@ entry_n.grid(row=1, column=1, padx=5, pady=5, sticky='ew')
 ttk.Label(input_frame, text="c (Bản mã):").grid(row=2, column=0, padx=5, pady=5, sticky='w')
 entry_c = ttk.Entry(input_frame, width=60)
 entry_c.grid(row=2, column=1, padx=5, pady=5, sticky='ew')
+
+# --- Load from file button ---
+btn_load_files = ttk.Button(input_frame, text="📂 Tải từ file (public_key.txt & ciphertext.txt)", command=load_from_files)
+btn_load_files.grid(row=3, column=0, columnspan=2, padx=5, pady=8, sticky='ew')
 
 # --- Attack Buttons Frame ---
 # Using a grid layout for buttons for better control
