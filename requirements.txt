@@ -1,0 +1,9 @@
+numpy
+sympy
+math
+os
+random
+textwrap
+threading
+time
+tkinter 

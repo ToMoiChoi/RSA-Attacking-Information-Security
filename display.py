@@ -190,8 +190,8 @@ def display_gen_key():
     global public_key, private_key, p_val, q_val, phi_val, public_key_label, time_gen_key_label, time_gen_key
     try:
         bit_size = int(entry_bitlength_key.get())
-        if bit_size < 16 or bit_size > 4096:
-            raise ValueError("Key size must be between 16 and 4096 bits.")
+        if bit_size <= 8 or bit_size >= 4096:
+            raise ValueError("Key size must be between 8 and 4096 bits.")
 
         # Disable UI during generation & hide old stuff
         entry_bitlength_key.config(state='disabled')
@@ -735,7 +735,7 @@ def display_entry_private_key(hide_only=False):
 
 # ================== MAIN WINDOW SETUP ==================
 root = Tk()
-root.title("Chương trình Mã hóa RSA - 20227019")
+root.title("Chương trình Mã hóa RSA")
 WINDOW_WIDTH = 1080
 WINDOW_HEIGHT = 720
 root.geometry(f'{WINDOW_WIDTH}x{WINDOW_HEIGHT}')
