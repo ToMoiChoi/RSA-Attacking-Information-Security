@@ -165,7 +165,8 @@ def wiener_attack(e, n, c):
     result = {
         "attack_type": "Wiener's Attack (Small d)",
         "success": False,
-        "message": "Wiener's attack failed. Private exponent 'd' might not be small enough (d < (1/3)n^(1/4)?) or conditions not met.",
+        "message": "Wiener's attack failed. "
+        "Private exponent 'd' might not be small enough (d < (1/3)n^(1/4)?) or conditions not met.",
         "d": None,
         "k": None, # Convergent numerator
         "phi_candidate": None,

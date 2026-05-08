@@ -302,7 +302,7 @@ def run_factorization_attack():
     c = validate_input(c_str, "c (Bản mã)")
     if None in [e, n, c]:
         return
-    if c >= n:
+    if c >= n and entry_mode.get() != "bin_single":
         messagebox.showerror("Lỗi Nhập Liệu", f"Bản mã (c={c}) phải nhỏ hơn modulus (n={n}).")
         return
 
@@ -331,7 +331,7 @@ def run_wiener_attack():
     c = validate_input(c_str, "c (Bản mã)")
     if None in [e, n, c]:
         return
-    if c >= n:
+    if c >= n and entry_mode.get() != "bin_single":
         messagebox.showerror("Lỗi Nhập Liệu", f"Bản mã (c={c}) phải nhỏ hơn modulus (n={n}).")
         return
 
@@ -360,7 +360,7 @@ def run_brute_force_attack():
     c = validate_input(c_str, "c (Bản mã)")
     if None in [e, n, c]:
         return
-    if c >= n:
+    if c >= n and entry_mode.get() != "bin_single":
         messagebox.showerror("Lỗi Nhập Liệu", f"Bản mã (c={c}) phải nhỏ hơn modulus (n={n}).")
         return
 
